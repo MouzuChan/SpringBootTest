@@ -76,7 +76,7 @@ public class PdfTestController {
 	        outStream.write(buffer, 0, bytesRead);
 	      }
 	      outStream.flush();
-	      inStrem.close();
+	      inStrem.close(); 
 	   }
 	   
 	   @RequestMapping("/download4")
