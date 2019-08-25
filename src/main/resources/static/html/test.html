@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/Commons2.css" />
+    <link rel="stylesheet" type="text/css" href="select2/select2.css" />
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div class="row" id="add-withinfosortId-row" style="display: none">
+        2     <div class="col-md-12" id="add-withinfosortId-divId"></div>
+        3 </div>
+    4 <div class="sticky-header">
+    5     <div class="mail-box">
+    6         <aside class="mail-nav mail-nav-bg-color" id="infosorListId-aside">
+    7             <div class="mail-nav-body">
+    8                 <div class="panel">
+    9                     <div id='div_menu'>
+    10                         <ul id="infosort"></ul>
+    11                     </div>
+    12                 </div>
+    13             </div>
+    14         </aside>
+    15         <div class="col-lg-12" id="section-mail-list-table">
+    16             <header class="panel-heading custom-tab ">
+    17                 <ul class="nav nav-tabs">
+    18                     <li class="active" id="section-mail-list-li"><a
+        19                         href="#section-mail-list" data-toggle="tab">新闻预览</a></li>
+    20                 </ul>
+    21             </header>
+    22             <div class="panel">
+    23                 <div class="panel-body">
+    24                     <div class="col-lg-12">
+    25                         <table id="infolinkTableId" class="table table-bordered"></table>
+    26                     </div>
+    27                 </div>
+    28             </div>
+    29         </div>
+    30
+    31     </div>
+    32 </div>
+    33
+    34 <!-- 预览页面 -->
+    35 <div aria-hidden="true" data-backdrop="static"
+    36     aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="myModal"
+    37     class="modal fade"></div>
+    <script type="text/javascript" src="js/jquery.pin.min.js"></script>
+    <script type="text/javascript" src="select2/select2.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script th:inline="javascript">
+        40 /*<![CDATA[*/
+        41     var  infosortId=[[${infosortId}]];
+        42     var  infolinkById;
+        43      var result = "";
+        44    //页面加载
+        45     $(function() {
+            46          //获取已有的栏目
+            47           initInfoSortTreeUsed();
+            48
+            49     });
+        50    //动态生成层级ul-li
+        51       function showall(menu_list, parent) {
+            52       parent.append("<li ><a href='###' onclick=showInfolink('"+menu_list.id+"')>"+menu_list.infosortName+"</a>");
+            53        if(menu_list.children.length>0){
+                54               parent.append("<ul id="+menu_list.id+">");
+                55             $.each(menu_list.children, function(i,val){
+                    56             var parent_this=$('#'+menu_list.id);
+                    57             showall(val,parent_this);
+                    58             });
+                59               parent.append("</ul></li>");
+                60           }else{
+                61               parent.append("</li>");
+                62           }
+            63     }
+        64
+        65   /* end */
+        66        function initInfoSortTreeUsed(){
+            67            $.ajax({
+                68                  url : "infosort/infosort-ztree-preview.json",
+                69                  dataType : "json",
+                70                  data : {"infosortId":infosortId},
+            71                  type : "POST",
+                72                  success : function(result) {
+                73                     var data=result.ajaxResultJson.obj;
+                74                     console.log(result);
+                75                            var num=$("#infosort");
+                76                            infolinkById =data.id;
+                77                         showinfolinkTableId(infolinkById);
+                78
+                79                            showall(data,num);
+                80                      },
+            81                 error : function(result) {
+                82                 }
+            83             });
+            84
+            85        };
+        86
+        87     function   showInfolink(id){
+            88
+            89         showinfolinkTableId(id);
+            90         $('#infolinkTableId').bootstrapTable('refresh');
+            91     }
+        92
+        93     //1.初始化Table
+        94     function showinfolinkTableId(id){
+            95         infolinkById=id;
+            96       $('#infolinkTableId').bootstrapTable({
+                97           url: 'infosort/getInfoLinkByInfosortId.json',
+                98           method: 'post',                      //请求方式（*）
+                99           dataType:'json',
+                100           contentType: "application/x-www-form-urlencoded",
+                101           toolbar: '#toolbar',                //工具按钮用哪个容器
+                102           undefinedText: "*",//当数据为 undefined 时显示的字符
+                103           striped: true,                      //是否显示行间隔色
+                104           cache: false,                       //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+                105           pagination: true,                   //是否显示分页（*）
+                106           pageSize: 5,  //每页显示的记录数
+                107           pageNumber:1, //当前第几页
+                108           pageList: [5,10,15,20,25],  //记录数可选列表
+                109           sortable: false,                     //是否启用排序
+                110           sortOrder: "asc",                   //排序方式
+                111           sidePagination: "server",           //分页方式：client客户端分页，server服务端分页（*）
+                112           ////查询参数,每次调用是会带上这个参数，可自定义
+            113           queryParams: queryParams,
+                114           search: false,                       //是否显示表格搜索，此搜索是客户端搜索，不会进服务端，所以，个人感觉意义不大
+                115           strictSearch: false,
+                116           showColumns: true,                  //是否显示所有的列
+                117           showRefresh: false,                  //是否显示刷新按钮
+                118           minimumCountColumns: 4,             //最少允许的列数
+                119           responseHandler:responseHandler,
+                120          // height: 600,                        //行高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
+            121           uniqueId: "id",                     //每一行的唯一标识，一般为主键列
+                122           showToggle: false,                    //是否显示详细视图和列表视图的切换按钮
+                123           cardView: false,                    //是否显示详细视图
+                124           detailView: false,                   //是否显示父子表
+                125           columns: [{
+                126               checkbox : true
+            127             }, {
+                128                 field : 'id',
+                    129                 title : 'ID',
+                    130                 visible : false
+                131             },{
+                132               field: 'infolinkTitle',
+                    133               title: '标题'
+                134           }, {
+                135               field: 'infolinkType',
+                    136               title: '类型',
+                    137               formatter:function (value,row,index){
+                    138                   var type=row.infolinkType;
+                    139                   var str ="";
+                    140                   if(type==0){str="编辑组编辑"};
+                    141                   if(type==1){str="普通链接"};
+                    142                   if(type==2){str="上传附件"};
+                    143
+                    144                   return str;
+                    145               }
+                146           },{
+                147               field: 'keyword',
+                    148               title: '关键字'
+                149
+                150           },{
+                151               field: 'summary',
+                    152               title: '摘要'
+                153             },
+            154           {
+                155               field: 'infolinkState',
+                    156               title: '状态',
+                    157               formatter:function (value,row,index){
+                    158                   var state=row.infolinkState;
+                    159                   var str ="";
+                    160                   if(state==0){value="未发布";
+                        161                        text = '<span style="color:#FF6600">'+value+'</span>'
+                        162                      };
+                    163                     if(state==1){value="发布";
+                        164                        text = '<span style="color:#00CCFF">'+value+'</span>'
+                        165                       };
+                    166                   return text;
+                    167               }
+                168           },
+            169            {
+                170               field: 'modifiedDate',
+                    171               title: '更新时间'
+                172
+                173           },{
+                174                  title: '操作',
+                    175                 field: 'id',
+                    176                 formatter:function(value,row,index){
+                    177                     var id=row.id;
+                    178                     var infolinkType =row.infolinkType;
+                    179                     var url=row.infolinkUrl;
+                    180                     var e;
+                    181                          e='<a href ="#" title="预览"><span class="fa fa-laptop" onclick="previewInfolink(\''+id+'\',\''+infolinkType+'\',\''+url+'\')"></span></a>&nbsp;&nbsp;';
+                    182                       return e;
+                    183                 },
+                184                events: 'operateEvents'
+                185          }]
+            186   });
+            187     };
+        188       function responseHandler(res) {
+            189              if (res) {
+                190                  return {
+                    191                      "rows" : res.list,
+                    192                      "total" :res.total
+                193                  };
+                194
+                195              } else {
+                196                  return {
+                    197                      "rows" : [],
+                    198                      "total" : 0
+                199                  };
+                200              }
+            201          };
+        202
+        203 //设置查询条件，把分页，查询条件，排序等信息拼接成一个models字符串对象传递至后台
+        204         function queryParams(params) {
+            205
+            206             var str={"page":this.pageNumber,
+                207                         "pageSize":this.pageSize,
+                208                         "filter":{"filters":[  {field:"infosortId",value:infolinkById} , {field:"infolinkState",value:1} ]},
+            209                                    "sort":[{"field":"id","dir":"ASC"}]
+            210                         }
+            211            var baseData = JSON.stringify(str);
+            212
+            213            var param = {
+                214                      models :baseData
+            215                  }
+            216             return param;
+            217         };
+        218
+        219
+        220         //预览
+        221         function previewInfolink(id,infolinkType,url){
+            222             if("1" == infolinkType){
+                223               window.location.replace("http://"+url);
+                224             }else{
+                225                 load('cms/infolink-preview-byinfosort?id='+id+'&infosortId='+infosortId);
+                226             }
+            227         };
+        228
+        229
+        230 /*]]>*/
+        231 </script>
+
+
+</body>
+</html>
